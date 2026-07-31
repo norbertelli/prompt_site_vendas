@@ -11,18 +11,30 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+  if (session.user.role !== "ADMIN") redirect("/store");
 
-  const products = await prisma.product.findMany({
-    where: { sellerId: session.user.id },
-    orderBy: { createdAt: "desc" },
-  });
+  const [categories, products, sellers] = await Promise.all([
+    prisma.category.findMany({ orderBy: { name: "asc" } }),
+    prisma.product.findMany({
+      include: {
+        category: { select: { name: true } },
+        seller: { select: { name: true, nomeLoja: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.user.findMany({
+      where: { role: "USER" },
+      select: { id: true, name: true, nomeLoja: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   return (
     <div className="space-y-10">
       <section>
-        <h1 className="mb-1 text-2xl font-bold text-slate-900">Meus produtos</h1>
+        <h1 className="mb-1 text-2xl font-bold text-slate-900">Gerenciar produtos</h1>
         <p className="text-sm text-slate-600">
-          Cadastre e gerencie os produtos do seu catálogo.
+          Cadastre e gerencie os produtos, categorias e arquivos PDF.
         </p>
       </section>
 
@@ -32,13 +44,19 @@ export default async function DashboardPage() {
             <h2 className="mb-4 text-lg font-semibold text-slate-900">
               Cadastrar novo produto
             </h2>
-            <ProductForm />
+            {categories.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                Crie uma categoria em <Link href="/admin" className="text-blue-600 hover:underline">Admin</Link> primeiro.
+              </p>
+            ) : (
+              <ProductForm categories={categories} sellers={sellers} />
+            )}
           </div>
         </div>
 
         <div className="lg:col-span-3">
           <h2 className="mb-4 text-lg font-semibold text-slate-900">
-            Seu catálogo ({products.length})
+            Todos os produtos ({products.length})
           </h2>
 
           {products.length === 0 ? (
@@ -68,7 +86,21 @@ export default async function DashboardPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium text-slate-900">{product.name}</p>
-                    <p className="text-sm text-slate-600">{formatBRL(product.price)}</p>
+                    <p className="text-sm text-slate-600">
+                      {product.category.name} ·{" "}
+                      {product.seller.nomeLoja || product.seller.name} ·{" "}
+                      {formatBRL(Number(product.price))}
+                    </p>
+                    {product.pdf && (
+                      <a
+                        href={`/api/products/${product.id}/pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        Ver PDF
+                      </a>
+                    )}
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <Link

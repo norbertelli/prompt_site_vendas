@@ -8,12 +8,12 @@ export default async function HomePage() {
     <div className="flex flex-col items-center justify-center gap-8 py-16 text-center">
       <div className="space-y-4">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-          Compre e venda com{" "}
-          <span className="text-blue-600">facilidade</span>
+          Sua loja com{" "}
+          <span className="text-blue-600">produtos organizados</span>
         </h1>
         <p className="mx-auto max-w-xl text-lg text-slate-600">
-          Cadastre seus produtos com fotos, gerencie seu catálogo e compre na
-          loja com pagamento seguro via PayPal.
+          Compre por categoria, acesse livros em PDF e pague com segurança via
+          PayPal.
         </p>
       </div>
 
@@ -25,12 +25,21 @@ export default async function HomePage() {
           Ver produtos
         </Link>
         {session?.user ? (
-          <Link
-            href="/dashboard"
-            className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            Cadastrar produto
-          </Link>
+          session.user.role === "ADMIN" ? (
+            <Link
+              href="/dashboard"
+              className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Gerenciar produtos
+            </Link>
+          ) : (
+            <Link
+              href="/store"
+              className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Explorar a loja
+            </Link>
+          )
         ) : (
           <Link
             href="/register"
@@ -44,12 +53,12 @@ export default async function HomePage() {
       <div className="mt-8 grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
         {[
           {
-            title: "Cadastre produtos",
-            desc: "Nome, descrição, valor e imagem com arrastar e soltar.",
+            title: "Categorias",
+            desc: "Produtos organizados por categoria, incluindo livros com PDF.",
           },
           {
             title: "Compre na loja",
-            desc: "Filtros por busca, vendedor e faixa de preço.",
+            desc: "Filtros por categoria, loja, busca e faixa de preço.",
           },
           {
             title: "Pague com PayPal",

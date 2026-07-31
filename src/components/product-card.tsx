@@ -10,7 +10,10 @@ type StoreProduct = {
   description: string;
   price: number;
   hasImage: boolean;
+  categoryName: string;
   sellerName: string;
+  hasPdf: boolean;
+  pdfUnlocked: boolean;
 };
 
 export function ProductCard({ product }: { product: StoreProduct }) {
@@ -44,11 +47,31 @@ export function ProductCard({ product }: { product: StoreProduct }) {
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-4">
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+            {product.categoryName}
+          </span>
+          {product.hasPdf && product.pdfUnlocked && (
+            <a
+              href={`/api/products/${product.id}/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-blue-600 hover:underline"
+            >
+              Ver PDF
+            </a>
+          )}
+          {product.hasPdf && !product.pdfUnlocked && (
+            <span className="text-xs text-slate-400" title="Liberado após a compra">
+              PDF na compra
+            </span>
+          )}
+        </div>
         <h3 className="line-clamp-1 font-semibold text-slate-900">{product.name}</h3>
         <p className="line-clamp-2 flex-1 text-sm text-slate-600">
           {product.description}
         </p>
-        <p className="text-xs text-slate-400">Vendido por {product.sellerName}</p>
+        <p className="text-xs text-slate-400">Loja: {product.sellerName}</p>
         <div className="flex items-center justify-between pt-1">
           <span className="text-lg font-bold text-slate-900">
             {formatBRL(product.price)}

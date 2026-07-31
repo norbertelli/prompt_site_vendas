@@ -15,9 +15,19 @@ async function main() {
   } else {
     const passwordHash = await bcrypt.hash(password, 12);
     await prisma.user.create({
-      data: { name, email, passwordHash, role: "ADMIN" },
+      data: { name, email, passwordHash, role: "ADMIN", nomeLoja: "Loja Oficial" },
     });
     console.log(`Admin criado: ${email} / ${password}`);
+  }
+
+  const categories = ["Livros", "Eletrônicos", "Roupas", "Casa e Jardim", "Outros"];
+
+  for (const nameCat of categories) {
+    const category = await prisma.category.findUnique({ where: { name: nameCat } });
+    if (!category) {
+      await prisma.category.create({ data: { name: nameCat } });
+      console.log(`Categoria criada: ${nameCat}`);
+    }
   }
 }
 

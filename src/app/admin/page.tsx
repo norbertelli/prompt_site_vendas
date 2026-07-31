@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { DeleteProductButton } from "@/components/delete-product-button";
+import { ProductForm } from "@/components/product-form";
+import { DeleteCategoryButton } from "@/components/delete-category-button";
+import { CategoryForm, CreateUserForm, UserStoreForm } from "@/components/admin-forms";
 import { formatBRL } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -11,13 +14,24 @@ export default async function AdminPage() {
   if (!session?.user?.id) redirect("/login");
   if (session.user.role !== "ADMIN") redirect("/store");
 
-  const [products, users, orders, totalRevenue] = await Promise.all([
+  const [categories, products, users, orders, totalRevenue] = await Promise.all([
+    prisma.category.findMany({ orderBy: { name: "asc" } }),
     prisma.product.findMany({
-      include: { seller: { select: { name: true, email: true } } },
+      include: {
+        seller: { select: { name: true, nomeLoja: true } },
+        category: { select: { name: true } },
+      },
       orderBy: { createdAt: "desc" },
     }),
     prisma.user.findMany({
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        nomeLoja: true,
+        createdAt: true,
+      },
       orderBy: { createdAt: "desc" },
     }),
     prisma.order.count({ where: { status: "COMPLETED" } }),
@@ -27,15 +41,20 @@ export default async function AdminPage() {
     }),
   ]);
 
+  const sellers = users.filter((u) => u.role === "USER");
+
   return (
     <div className="space-y-10">
       <section>
         <h1 className="text-2xl font-bold text-slate-900">Painel administrativo</h1>
-        <p className="text-sm text-slate-600">Visão geral do site.</p>
+        <p className="text-sm text-slate-600">
+          Gerencie categorias, produtos e usuários.
+        </p>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         {[
+          { label: "Categorias", value: categories.length },
           { label: "Produtos", value: products.length },
           { label: "Usuários", value: users.length },
           { label: "Pedidos concluídos", value: orders },
@@ -48,7 +67,7 @@ export default async function AdminPage() {
             <p className="text-2xl font-bold text-slate-900">{s.value}</p>
           </div>
         ))}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:col-span-3">
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:col-span-4">
           <p className="text-sm text-slate-500">Receita total (pedidos concluídos)</p>
           <p className="text-2xl font-bold text-slate-900">
             {formatBRL(Number(totalRevenue._sum.total || 0))}
@@ -56,9 +75,49 @@ export default async function AdminPage() {
         </div>
       </section>
 
+      <section className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-slate-900">Categorias</h2>
+            <div className="mb-4 space-y-2">
+              {categories.map((cat) => (
+                <div
+                  key={cat.id}
+                  className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+                >
+                  <span className="text-sm font-medium text-slate-800">{cat.name}</span>
+                  <DeleteCategoryButton categoryId={cat.id} />
+                </div>
+              ))}
+              {categories.length === 0 && (
+                <p className="text-sm text-slate-500">Nenhuma categoria ainda.</p>
+              )}
+            </div>
+            <CategoryForm />
+          </div>
+
+          <CreateUserForm />
+        </div>
+
+        <div className="lg:col-span-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-slate-900">
+              Cadastrar novo produto
+            </h2>
+            {categories.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                Crie uma categoria antes de cadastrar produtos.
+              </p>
+            ) : (
+              <ProductForm categories={categories} sellers={sellers} />
+            )}
+          </div>
+        </div>
+      </section>
+
       <section>
         <h2 className="mb-4 text-lg font-semibold text-slate-900">
-          Todos os produtos
+          Todos os produtos ({products.length})
         </h2>
         <ul className="space-y-3">
           {products.map((product) => (
@@ -83,7 +142,9 @@ export default async function AdminPage() {
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-slate-900">{product.name}</p>
                 <p className="text-sm text-slate-600">
-                  {product.seller.name} · {formatBRL(Number(product.price))}
+                  {product.category.name} ·{" "}
+                  {product.seller.nomeLoja || product.seller.name} ·{" "}
+                  {formatBRL(Number(product.price))}
                 </p>
               </div>
               <DeleteProductButton productId={product.id} />
@@ -105,6 +166,7 @@ export default async function AdminPage() {
               <tr>
                 <th className="px-4 py-3 font-medium">Nome</th>
                 <th className="px-4 py-3 font-medium">Email</th>
+                <th className="px-4 py-3 font-medium">Nome da loja</th>
                 <th className="px-4 py-3 font-medium">Papel</th>
                 <th className="px-4 py-3 font-medium">Criado em</th>
               </tr>
@@ -114,6 +176,9 @@ export default async function AdminPage() {
                 <tr key={user.id} className="border-b border-slate-100 last:border-0">
                   <td className="px-4 py-3 font-medium text-slate-900">{user.name}</td>
                   <td className="px-4 py-3 text-slate-600">{user.email}</td>
+                  <td className="px-4 py-3">
+                    <UserStoreForm userId={user.id} nomeLoja={user.nomeLoja} />
+                  </td>
                   <td className="px-4 py-3">
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-semibold ${

@@ -16,11 +16,18 @@ model User {
   id           String    @id @default(cuid())
   name         String
   email        String    @unique
-  passwordHash String
+  passwordHash String?
   role         Role      @default(USER)
+  nomeLoja     String?
   createdAt    DateTime  @default(now())
   products     Product[]
   orders       Order[]
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  products Product[]
 }
 
 model Product {
@@ -30,6 +37,10 @@ model Product {
   price       Decimal     @db.Decimal(10, 2)
   image       Bytes?
   imageType   String?
+  pdf         Bytes?
+  pdfType     String?
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id])
   createdAt   DateTime    @default(now())
   sellerId    String
   seller      User        @relation(fields: [sellerId], references: [id], onDelete: Cascade)

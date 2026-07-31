@@ -10,18 +10,38 @@ type ProductFormProps = {
     name: string;
     description: string;
     price: number;
+    categoryId: string;
+    sellerId: string;
     imageUrl: string | null;
+    pdfUrl: string | null;
   };
+  categories: { id: string; name: string }[];
+  sellers: { id: string; name: string; nomeLoja: string | null }[];
 };
 
-export function ProductForm({ product }: ProductFormProps) {
+export function ProductForm({ product, categories, sellers }: ProductFormProps) {
   const action = product ? updateProduct : createProduct;
   const [state, formAction, pending] = useActionState(action, null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(product?.imageUrl ?? null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [pdfName, setPdfName] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [pdfDragOver, setPdfDragOver] = useState(false);
+  const [categoryId, setCategoryId] = useState(product?.categoryId ?? categories[0]?.id ?? "");
+  const [removePdf, setRemovePdf] = useState(false);
+
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const isLivros = selectedCategory?.name.toLowerCase() === "livros";
+
+  function setFileInput(input: HTMLInputElement | null, file: File) {
+    if (!input) return;
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+  }
 
   function handleFiles(files: FileList | null) {
     const file = files?.[0];
@@ -36,11 +56,23 @@ export function ProductForm({ product }: ProductFormProps) {
     }
     setFileName(file.name);
     setPreview(URL.createObjectURL(file));
-    if (fileInputRef.current) {
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      fileInputRef.current.files = dt.files;
+    setFileInput(fileInputRef.current, file);
+  }
+
+  function handlePdf(files: FileList | null) {
+    const file = files?.[0];
+    if (!file) return;
+    if (!file.type.includes("pdf") && !file.name.toLowerCase().endsWith(".pdf")) {
+      alert("Selecione um arquivo PDF.");
+      return;
     }
+    if (file.size > 20 * 1024 * 1024) {
+      alert("O PDF deve ter no máximo 20MB.");
+      return;
+    }
+    setPdfName(file.name);
+    setRemovePdf(false);
+    setFileInput(pdfInputRef.current, file);
   }
 
   return (
@@ -75,20 +107,67 @@ export function ProductForm({ product }: ProductFormProps) {
         />
       </div>
 
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="categoryId" className="mb-1 block text-sm font-medium text-slate-700">
+            Categoria
+          </label>
+          <select
+            id="categoryId"
+            name="categoryId"
+            required
+            value={categoryId}
+            onChange={(e) => {
+              setCategoryId(e.target.value);
+              setRemovePdf(true);
+            }}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+          >
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="price" className="mb-1 block text-sm font-medium text-slate-700">
+            Valor (R$)
+          </label>
+          <input
+            id="price"
+            name="price"
+            type="number"
+            required
+            step="0.01"
+            min="0.01"
+            defaultValue={product?.price}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+          />
+        </div>
+      </div>
+
       <div>
-        <label htmlFor="price" className="mb-1 block text-sm font-medium text-slate-700">
-          Valor (R$)
+        <label htmlFor="sellerId" className="mb-1 block text-sm font-medium text-slate-700">
+          Vendedor (loja)
         </label>
-        <input
-          id="price"
-          name="price"
-          type="number"
+        <select
+          id="sellerId"
+          name="sellerId"
           required
-          step="0.01"
-          min="0.01"
-          defaultValue={product?.price}
+          defaultValue={product?.sellerId ?? ""}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-        />
+        >
+          <option value="" disabled>
+            Selecione o vendedor
+          </option>
+          {sellers.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.nomeLoja || s.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div>
@@ -149,9 +228,81 @@ export function ProductForm({ product }: ProductFormProps) {
         )}
       </div>
 
+      {isLivros && (
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700">
+            Arquivo PDF do livro
+          </label>
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Enviar arquivo PDF do livro"
+            onClick={() => pdfInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") pdfInputRef.current?.click();
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setPdfDragOver(true);
+            }}
+            onDragLeave={() => setPdfDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setPdfDragOver(false);
+              handlePdf(e.dataTransfer.files);
+            }}
+            className={`flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-5 text-center transition-colors ${
+              pdfDragOver
+                ? "border-green-500 bg-green-50"
+                : "border-slate-300 bg-slate-50 hover:border-green-400 hover:bg-green-50/50"
+            }`}
+          >
+            {pdfName || (!removePdf && product?.pdfUrl) ? (
+              <div className="text-slate-700">
+                <p className="font-medium">📄 {pdfName || "Arquivo PDF anexado"}</p>
+                <p className="text-sm">Solte um novo arquivo para substituir</p>
+              </div>
+            ) : (
+              <div className="text-slate-500">
+                <p className="font-medium">Arraste e solte o PDF aqui</p>
+                <p className="text-sm">ou clique para selecionar (máx. 20MB)</p>
+              </div>
+            )}
+          </div>
+          <input
+            ref={pdfInputRef}
+            type="file"
+            name="pdf"
+            accept="application/pdf,.pdf"
+            className="hidden"
+            onChange={(e) => handlePdf(e.target.files)}
+          />
+          {!removePdf && product?.pdfUrl && (
+            <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+              <input
+                type="checkbox"
+                name="removePdf"
+                value="1"
+                checked={removePdf}
+                onChange={(e) => setRemovePdf(e.target.checked)}
+              />
+              Remover PDF existente
+            </label>
+          )}
+        </div>
+      )}
+      {!isLivros && (
+        <input type="hidden" name="removePdf" value="1" />
+      )}
+
       {state?.error && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
           {state.error}
+        </p>
+      )}
+      {state?.success && (
+        <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
+          Produto salvo com sucesso.
         </p>
       )}
 

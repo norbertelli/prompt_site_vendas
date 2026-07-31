@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "LojaVendas - E-commerce",
-  description: "Site de e-commerce com cadastro de produtos e pagamento via PayPal",
+  description: "Loja com categorias, livros em PDF e pagamento via PayPal",
 };
 
 export default async function RootLayout({
@@ -37,7 +37,11 @@ export default async function RootLayout({
           <Navbar
             user={
               session?.user
-                ? { name: session.user.name ?? "Usuário", role: session.user.role }
+                ? {
+                    name: session.user.name ?? "Usuário",
+                    nomeLoja: session.user.nomeLoja ?? null,
+                    role: session.user.role,
+                  }
                 : null
             }
           />

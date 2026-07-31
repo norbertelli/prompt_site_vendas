@@ -7,7 +7,7 @@ import { useCart } from "@/components/cart-context";
 export function Navbar({
   user,
 }: {
-  user?: { name: string; role: "ADMIN" | "USER" } | null;
+  user?: { name: string; nomeLoja: string | null; role: "ADMIN" | "USER" } | null;
 }) {
   const pathname = usePathname();
   const { count } = useCart();
@@ -30,15 +30,15 @@ export function Navbar({
           <Link href="/store" className={linkCls("/store")}>
             Loja
           </Link>
-          {user && (
-            <Link href="/dashboard" className={linkCls("/dashboard")}>
-              Meus produtos
-            </Link>
-          )}
           {user?.role === "ADMIN" && (
-            <Link href="/admin" className={linkCls("/admin")}>
-              Admin
-            </Link>
+            <>
+              <Link href="/dashboard" className={linkCls("/dashboard")}>
+                Produtos
+              </Link>
+              <Link href="/admin" className={linkCls("/admin")}>
+                Admin
+              </Link>
+            </>
           )}
           <Link href="/cart" className={linkCls("/cart")}>
             Carrinho
@@ -54,7 +54,7 @@ export function Navbar({
           {user ? (
             <>
               <span className="hidden text-sm text-slate-500 sm:inline">
-                {user.name}
+                {user.nomeLoja || user.name}
               </span>
               <form action="/api/auth/signout" method="post">
                 <button className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100">

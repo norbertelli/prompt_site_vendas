@@ -16,6 +16,7 @@ export default async function StorePage({
 
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q.trim() : "";
+  const category = typeof sp.category === "string" ? sp.category.trim() : "";
   const seller = typeof sp.seller === "string" ? sp.seller.trim() : "";
   const min = typeof sp.min === "string" ? sp.min.trim() : "";
   const max = typeof sp.max === "string" ? sp.max.trim() : "";
@@ -43,19 +44,45 @@ export default async function StorePage({
     where.price = priceFilter;
   }
   if (seller) {
-    where.seller = { name: { contains: seller, mode: "insensitive" } };
+    where.seller = {
+      OR: [
+        { name: { contains: seller, mode: "insensitive" } },
+        { nomeLoja: { contains: seller, mode: "insensitive" } },
+      ],
+    };
+  }
+  if (category) {
+    where.category = { name: category };
   }
 
-  const products = await prisma.product.findMany({
-    where,
-    include: { seller: { select: { name: true } } },
-    orderBy:
-      sort === "cheap"
-        ? { price: "asc" }
-        : sort === "expensive"
-          ? { price: "desc" }
-          : { createdAt: "desc" },
-  });
+  const [products, categories, sellers, purchasedItems] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      include: {
+        seller: { select: { name: true, nomeLoja: true } },
+        category: { select: { name: true } },
+      },
+      orderBy:
+        sort === "cheap"
+          ? { price: "asc" }
+          : sort === "expensive"
+            ? { price: "desc" }
+            : { createdAt: "desc" },
+    }),
+    prisma.category.findMany({ orderBy: { name: "asc" } }),
+    prisma.user.findMany({
+      where: { role: "USER", OR: [{ nomeLoja: { not: null } }, { products: { some: {} } }] },
+      select: { name: true, nomeLoja: true },
+      distinct: ["name", "nomeLoja"],
+      orderBy: { name: "asc" },
+    }),
+    prisma.orderItem.findMany({
+      where: { order: { userId: session.user.id, status: "COMPLETED" } },
+      select: { productId: true },
+    }),
+  ]);
+
+  const purchasedProductIds = new Set(purchasedItems.map((i) => i.productId));
 
   return (
     <div className="space-y-8">
@@ -80,12 +107,30 @@ export default async function StorePage({
             placeholder="Buscar produto..."
             className="col-span-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 md:col-span-2"
           />
-          <input
+          <select
+            name="category"
+            defaultValue={category}
+            className="col-span-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500"
+          >
+            <option value="">Todas as categorias</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <select
             name="seller"
             defaultValue={seller}
-            placeholder="Vendedor"
             className="col-span-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500"
-          />
+          >
+            <option value="">Todas as lojas</option>
+            {sellers.map((s) => (
+              <option key={s.name + s.nomeLoja} value={s.nomeLoja || s.name}>
+                {s.nomeLoja || s.name}
+              </option>
+            ))}
+          </select>
           <input
             name="min"
             defaultValue={min}
@@ -137,7 +182,10 @@ export default async function StorePage({
                 description: product.description,
                 price: Number(product.price),
                 hasImage: Boolean(product.image),
-                sellerName: product.seller.name,
+                categoryName: product.category.name,
+                sellerName: product.seller.nomeLoja || product.seller.name,
+                hasPdf: Boolean(product.pdf),
+                pdfUnlocked: purchasedProductIds.has(product.id),
               }}
             />
           ))}
