@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { deleteProduct } from "@/lib/actions/products";
+import { DeleteProductButton } from "@/components/delete-product-button";
 import { formatBRL } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -86,19 +86,7 @@ export default async function AdminPage() {
                   {product.seller.name} · {formatBRL(Number(product.price))}
                 </p>
               </div>
-              <form
-                action={deleteProduct.bind(null, product.id)}
-                onSubmit={(e) => {
-                  if (!confirm("Excluir este produto?")) e.preventDefault();
-                }}
-              >
-                <button
-                  type="submit"
-                  className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
-                >
-                  Excluir
-                </button>
-              </form>
+              <DeleteProductButton productId={product.id} />
             </li>
           ))}
           {products.length === 0 && (
