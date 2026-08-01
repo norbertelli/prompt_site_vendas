@@ -8,6 +8,7 @@ import { signIn, signOut } from "@/lib/auth";
 export async function register(prevState: unknown, formData: FormData) {
   const name = String(formData.get("name") || "").trim();
   const email = String(formData.get("email") || "").trim().toLowerCase();
+  const phone = String(formData.get("phone") || "").trim();
   const password = String(formData.get("password") || "");
   const confirm = String(formData.get("confirmPassword") || "");
 
@@ -22,7 +23,7 @@ export async function register(prevState: unknown, formData: FormData) {
   const passwordHash = await bcrypt.hash(password, 12);
 
   await prisma.user.create({
-    data: { name, email, passwordHash, role: "USER" },
+    data: { name, email, phone: phone || null, passwordHash, role: "USER" },
   });
 
   try {
@@ -39,8 +40,14 @@ export async function login(prevState: unknown, formData: FormData) {
   const email = String(formData.get("email") || "");
   const password = String(formData.get("password") || "");
 
+  const user = await prisma.user.findUnique({
+    where: { email: email.toLowerCase() },
+    select: { role: true },
+  });
+  const redirectTo = user?.role === "ADMIN" ? "/admin" : "/";
+
   try {
-    await signIn("credentials", { email, password, redirectTo: "/" });
+    await signIn("credentials", { email, password, redirectTo });
   } catch (error) {
     if (error instanceof AuthError) {
       return { error: "Email ou senha inválidos." };

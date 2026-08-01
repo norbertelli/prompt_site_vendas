@@ -14,13 +14,12 @@ export default async function EditProductPage({
   const { id } = await params;
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
-  if (session.user.role !== "ADMIN") redirect("/store");
+  if (session.user.role !== "ADMIN") redirect("/");
 
   const [product, categories, sellers] = await Promise.all([
     prisma.product.findUnique({ where: { id } }),
     prisma.category.findMany({ orderBy: { name: "asc" } }),
-    prisma.user.findMany({
-      where: { role: "USER" },
+    prisma.seller.findMany({
       select: { id: true, name: true, nomeLoja: true },
       orderBy: { name: "asc" },
     }),

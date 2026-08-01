@@ -49,7 +49,7 @@ export default async function RootLayout({
             {children}
           </main>
           <footer className="border-t border-slate-200 bg-white py-6 text-center text-sm text-slate-500">
-            LojaVendas © {new Date().getFullYear()}
+            {session?.user?.nomeLoja || "LojaVendas"} © {new Date().getFullYear()}
           </footer>
         </CartProvider>
       </body>

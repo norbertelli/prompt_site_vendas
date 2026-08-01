@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useActionState } from "react";
 import { createProduct, updateProduct } from "@/lib/actions/products";
 
@@ -18,11 +18,11 @@ type ProductFormProps = {
   categories: { id: string; name: string }[];
   sellers: { id: string; name: string; nomeLoja: string | null }[];
 };
-
 export function ProductForm({ product, categories, sellers }: ProductFormProps) {
   const action = product ? updateProduct : createProduct;
   const [state, formAction, pending] = useActionState(action, null);
 
+  const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(product?.imageUrl ?? null);
@@ -32,6 +32,20 @@ export function ProductForm({ product, categories, sellers }: ProductFormProps) 
   const [pdfDragOver, setPdfDragOver] = useState(false);
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? categories[0]?.id ?? "");
   const [removePdf, setRemovePdf] = useState(false);
+
+  useEffect(() => {
+    if (!state?.success || product) return;
+    const timer = setTimeout(() => {
+      setPreview(null);
+      setFileName(null);
+      setPdfName(null);
+      setRemovePdf(false);
+      formRef.current?.reset();
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (pdfInputRef.current) pdfInputRef.current.value = "";
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [state, product, categories]);
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
   const isLivros = selectedCategory?.name.toLowerCase() === "livros";
@@ -76,7 +90,7 @@ export function ProductForm({ product, categories, sellers }: ProductFormProps) 
   }
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form ref={formRef} action={formAction} className="space-y-5">
       {product && <input type="hidden" name="id" value={product.id} />}
 
       <div>
@@ -277,6 +291,23 @@ export function ProductForm({ product, categories, sellers }: ProductFormProps) 
             className="hidden"
             onChange={(e) => handlePdf(e.target.files)}
           />
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => pdfInputRef.current?.click()}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Escolher arquivo PDF
+            </button>
+            {pdfName && (
+              <span className="text-xs text-slate-500">{pdfName}</span>
+            )}
+            {!removePdf && product?.pdfUrl && !pdfName && (
+              <span className="text-xs text-slate-500">
+                PDF existente anexado. Envie outro para substituir.
+              </span>
+            )}
+          </div>
           {!removePdf && product?.pdfUrl && (
             <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
               <input

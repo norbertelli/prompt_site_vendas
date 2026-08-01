@@ -42,6 +42,20 @@ export default function RegisterPage() {
           </div>
 
           <div>
+            <label htmlFor="phone" className="mb-1 block text-sm font-medium text-slate-700">
+              Telefone <span className="text-slate-400">(opcional)</span>
+            </label>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              autoComplete="tel"
+              placeholder="(00) 00000-0000"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+
+          <div>
             <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
               Senha
             </label>

@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
-  if (session.user.role !== "ADMIN") redirect("/store");
+  if (session.user.role !== "ADMIN") redirect("/");
 
   const [categories, products, sellers] = await Promise.all([
     prisma.category.findMany({ orderBy: { name: "asc" } }),
@@ -22,8 +22,7 @@ export default async function DashboardPage() {
       },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.user.findMany({
-      where: { role: "USER" },
+    prisma.seller.findMany({
       select: { id: true, name: true, nomeLoja: true },
       orderBy: { name: "asc" },
     }),

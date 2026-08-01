@@ -28,7 +28,7 @@ export async function createProduct(prevState: unknown, formData: FormData) {
   const name = String(formData.get("name") || "").trim();
   const description = String(formData.get("description") || "").trim();
   const categoryId = String(formData.get("categoryId") || "");
-  const sellerId = String(formData.get("sellerId") || session.user.id);
+  const sellerId = String(formData.get("sellerId") || "");
   const priceRaw = String(formData.get("price") || "").trim();
   const image = formData.get("image");
   const pdf = formData.get("pdf");
@@ -36,6 +36,7 @@ export async function createProduct(prevState: unknown, formData: FormData) {
   if (!name) return { error: "Informe o nome do produto." };
   if (!description) return { error: "Informe a descrição do produto." };
   if (!categoryId) return { error: "Selecione uma categoria." };
+  if (!sellerId) return { error: "Selecione o vendedor." };
 
   const price = Number(priceRaw.replace(",", "."));
   if (!Number.isFinite(price) || price <= 0) return { error: "Informe um valor válido." };
@@ -43,7 +44,7 @@ export async function createProduct(prevState: unknown, formData: FormData) {
   const category = await prisma.category.findUnique({ where: { id: categoryId } });
   if (!category) return { error: "Categoria inválida." };
 
-  const seller = await prisma.user.findUnique({ where: { id: sellerId } });
+  const seller = await prisma.seller.findUnique({ where: { id: sellerId } });
   if (!seller) return { error: "Vendedor inválido." };
 
   let imageBuffer: Uint8Array<ArrayBuffer> | null = null;
@@ -89,6 +90,7 @@ export async function createProduct(prevState: unknown, formData: FormData) {
   });
 
   revalidatePath("/store");
+  revalidatePath("/");
   revalidatePath("/dashboard");
   revalidatePath("/admin");
   return { success: true };
@@ -122,7 +124,7 @@ export async function updateProduct(prevState: unknown, formData: FormData) {
   if (!category) return { error: "Categoria inválida." };
 
   if (sellerId) {
-    const seller = await prisma.user.findUnique({ where: { id: sellerId } });
+    const seller = await prisma.seller.findUnique({ where: { id: sellerId } });
     if (!seller) return { error: "Vendedor inválido." };
   }
 
@@ -176,6 +178,7 @@ export async function updateProduct(prevState: unknown, formData: FormData) {
   });
 
   revalidatePath("/store");
+  revalidatePath("/");
   revalidatePath("/dashboard");
   revalidatePath("/admin");
   return { success: true };
@@ -187,6 +190,7 @@ export async function deleteProduct(id: string) {
 
   await prisma.product.delete({ where: { id } });
   revalidatePath("/store");
+  revalidatePath("/");
   revalidatePath("/dashboard");
   revalidatePath("/admin");
 }
