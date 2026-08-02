@@ -28,7 +28,7 @@ export async function createUser(prevState: unknown, formData: FormData) {
     data: { name, email, phone: phone || null, passwordHash, role, nomeLoja: nomeLoja || null },
   });
 
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   return { success: true };
 }
 
@@ -47,7 +47,7 @@ export async function createSeller(prevState: unknown, formData: FormData) {
     data: { name, nomeLoja, email: email || null },
   });
 
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath("/dashboard");
   return { success: true };
 }
@@ -60,7 +60,7 @@ export async function deleteSeller(id: string) {
   if (products > 0) return;
 
   await prisma.seller.delete({ where: { id } });
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath("/dashboard");
 }
 
@@ -75,7 +75,7 @@ export async function createCategory(prevState: unknown, formData: FormData) {
   if (existing) return { error: "Já existe uma categoria com este nome." };
 
   await prisma.category.create({ data: { name } });
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath("/dashboard");
   return { success: true };
 }
@@ -88,7 +88,7 @@ export async function deleteCategory(id: string) {
   if (products > 0) return;
 
   await prisma.category.delete({ where: { id } });
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath("/dashboard");
 }
 
@@ -106,7 +106,7 @@ export async function updateUserStore(prevState: unknown, formData: FormData) {
     data: { nomeLoja: nomeLoja || null },
   });
 
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   return { success: true };
 }
 
@@ -123,7 +123,7 @@ export async function updateCategory(prevState: unknown, formData: FormData) {
   if (existing && existing.id !== id) return { error: "Já existe uma categoria com este nome." };
 
   await prisma.category.update({ where: { id }, data: { name } });
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath("/dashboard");
   return { success: true };
 }
@@ -145,7 +145,7 @@ export async function updateSeller(prevState: unknown, formData: FormData) {
     data: { name, nomeLoja, email: email || null },
   });
 
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath("/dashboard");
   return { success: true };
 }
@@ -171,7 +171,7 @@ export async function updateUser(prevState: unknown, formData: FormData) {
     data: { name, email, phone: phone || null, nomeLoja: nomeLoja || null },
   });
 
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   return { success: true };
 }
 
@@ -189,7 +189,7 @@ export async function setUserRole(prevState: unknown, formData: FormData) {
     data: { role },
   });
 
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   return { success: true };
 }
 
@@ -199,5 +199,5 @@ export async function deleteUser(id: string) {
   if (id === session.user.id) return { error: "Você não pode excluir a si mesmo." };
 
   await prisma.user.delete({ where: { id } });
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
 }

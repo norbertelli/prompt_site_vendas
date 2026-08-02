@@ -45,7 +45,7 @@ export default async function DashboardPage() {
             </h2>
             {categories.length === 0 ? (
               <p className="text-sm text-slate-500">
-                Crie uma categoria em <Link href="/admin" className="text-blue-600 hover:underline">Admin</Link> primeiro.
+                Crie uma categoria em <Link href="/admin/categorias" className="text-blue-600 hover:underline">Admin</Link> primeiro.
               </p>
             ) : (
               <ProductForm categories={categories} sellers={sellers} />

@@ -92,7 +92,7 @@ export async function createProduct(prevState: unknown, formData: FormData) {
   revalidatePath("/store");
   revalidatePath("/");
   revalidatePath("/dashboard");
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   return { success: true };
 }
 
@@ -180,7 +180,7 @@ export async function updateProduct(prevState: unknown, formData: FormData) {
   revalidatePath("/store");
   revalidatePath("/");
   revalidatePath("/dashboard");
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   return { success: true };
 }
 
@@ -192,5 +192,5 @@ export async function deleteProduct(id: string) {
   revalidatePath("/store");
   revalidatePath("/");
   revalidatePath("/dashboard");
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
 }
