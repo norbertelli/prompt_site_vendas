@@ -1,15 +1,16 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: mysql:8.0
     restart: unless-stopped
     environment:
-      POSTGRES_USER: vendas
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vendas}
-      POSTGRES_DB: vendas
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: vendas
+      MYSQL_USER: vendas
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-vendas}
     volumes:
-      - pgdata_vendas:/var/lib/postgresql/data
+      - mysqldata_vendas:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U vendas -d vendas"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -21,7 +22,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://vendas:${POSTGRES_PASSWORD:-vendas}@db:5432/vendas?schema=public
+      DATABASE_URL: mysql://vendas:${MYSQL_PASSWORD:-vendas}@db:3306/vendas
       AUTH_SECRET: ${AUTH_SECRET}
       AUTH_URL: ${NEXT_PUBLIC_APP_URL}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
@@ -47,6 +48,6 @@ services:
       - caddy_config:/config
 
 volumes:
-  pgdata_vendas:
+  mysqldata_vendas:
   caddy_data:
   caddy_config:

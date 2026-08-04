@@ -27,8 +27,8 @@ export default async function HomePage({
 
   if (q) {
     where.OR = [
-      { name: { contains: q, mode: "insensitive" } },
-      { description: { contains: q, mode: "insensitive" } },
+      { name: { contains: q } },
+      { description: { contains: q } },
     ];
   }
   const priceFilter: { gte?: number; lte?: number } = {};
@@ -44,8 +44,8 @@ export default async function HomePage({
   if (seller) {
     where.seller = {
       OR: [
-        { name: { contains: seller, mode: "insensitive" } },
-        { nomeLoja: { contains: seller, mode: "insensitive" } },
+        { name: { contains: seller } },
+        { nomeLoja: { contains: seller } },
       ],
     };
   }

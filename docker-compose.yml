@@ -1,16 +1,17 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: mysql:8.0
     container_name: ps_vendas_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: vendas
-      POSTGRES_PASSWORD: vendas
-      POSTGRES_DB: vendas
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: vendas
+      MYSQL_USER: vendas
+      MYSQL_PASSWORD: vendas
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mysqldata:/var/lib/mysql
 
 volumes:
-  pgdata:
+  mysqldata:

@@ -10,7 +10,7 @@ Site de e-commerce com:
 ## Stack
 
 - Next.js 16 (App Router, TypeScript, Tailwind CSS)
-- PostgreSQL (Docker)
+- MySQL 8 (Docker)
 - Prisma ORM
 - NextAuth v5 (credenciais + bcrypt)
 - PayPal REST API (sandbox por padrão)
@@ -18,7 +18,7 @@ Site de e-commerce com:
 ## Pré-requisitos
 
 - Node.js 20+
-- Docker (para o banco PostgreSQL)
+- Docker (para o banco MySQL)
 
 ## Configuração
 
@@ -26,9 +26,10 @@ Site de e-commerce com:
 
 ```bash
 docker run -d --name ps_vendas_db \
-  -e POSTGRES_USER=vendas -e POSTGRES_PASSWORD=vendas -e POSTGRES_DB=vendas \
-  -p 5432:5432 -v pgdata_vendas:/var/lib/postgresql/data \
-  postgres:16-alpine
+  -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=vendas \
+  -e MYSQL_USER=vendas -e MYSQL_PASSWORD=vendas \
+  -p 3306:3306 -v mysqldata:/var/lib/mysql \
+  mysql:8.0
 ```
 
 (Se `docker compose` estiver disponível, o `docker-compose.yml` também funciona.)
@@ -38,7 +39,7 @@ docker run -d --name ps_vendas_db \
 Copie as variáveis de `/.env` e ajuste:
 
 ```env
-DATABASE_URL="postgresql://vendas:vendas@localhost:5432/vendas?schema=public"
+DATABASE_URL="mysql://vendas:vendas@localhost:3306/vendas"
 AUTH_SECRET="gere-um-segredo-longo"           # ex: openssl rand -base64 32
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 

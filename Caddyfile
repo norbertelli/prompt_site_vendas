@@ -1,3 +1,3 @@
-www.comeshop.com, comeshop.com {
+www.comeshop.com.br, comeshop.com.br {
 	reverse_proxy app:3000
 }
