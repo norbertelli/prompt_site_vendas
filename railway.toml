@@ -4,7 +4,7 @@ dockerfilePath = "Dockerfile"
 watchPatterns = ["prisma/**/*"]
 
 [deploy]
-startCommand = "node node_modules/prisma/build/index.js migrate deploy && node server.js"
+startCommand = "node node_modules/prisma/build/index.js migrate deploy && HOSTNAME=0.0.0.0 PORT=3000 node server.js"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
