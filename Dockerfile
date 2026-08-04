@@ -36,4 +36,4 @@ COPY --from=builder /app/node_modules ./node_modules
 
 USER nextjs
 EXPOSE 3000
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node server.js"]
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && HOSTNAME=0.0.0.0 PORT=3000 node server.js"]
