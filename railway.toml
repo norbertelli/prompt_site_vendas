@@ -4,7 +4,7 @@ dockerfilePath = "Dockerfile"
 watchPatterns = ["prisma/**/*"]
 
 [deploy]
-startCommand = "sh -c '(timeout 60 node node_modules/prisma/build/index.js migrate deploy >/tmp/migrate.log 2>&1 || echo MIGRATE_FAILED >>/tmp/migrate.log) & HOSTNAME=0.0.0.0 PORT=3000 node server.js'
+startCommand = "(timeout 60 node node_modules/prisma/build/index.js migrate deploy >/tmp/migrate.log 2>&1 || true) & HOSTNAME=0.0.0.0 PORT=3000 node server.js"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
