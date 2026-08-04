@@ -33,7 +33,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules ./node_modules
+COPY --chown=nextjs:nodejs start.sh ./start.sh
+RUN chmod +x start.sh
 
 USER nextjs
 EXPOSE 3000
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && HOSTNAME=0.0.0.0 PORT=3000 node server.js"]
+CMD ["sh", "start.sh"]
